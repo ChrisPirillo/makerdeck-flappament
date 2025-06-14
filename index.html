@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MakerDeck Flappament - 3D Printing Arcade Game</title>
+
+    <meta name="description" content="Fly your 3D model through a gauntlet of 3D printer nozzles in MakerDeck Flappament, a challenging arcade game by MakerDeck! How high can you score?">
+    <meta name="keywords" content="MakerDeck, Flappament, 3D printing game, arcade game, flappy bird style, 3D model game, STL game, browser game, HTML5 game, Chris Pirillo, gaming, 3D printer nozzle">
+    <meta name="author" content="MakerDeck">
+    <link rel="canonical" href="https://pirillo.com/arcade/makerdeck-flappament.html">
+
+    <meta property="og:title" content="MakerDeck Flappament - 3D Printing Arcade Game">
+    <meta property="og:description" content="Fly your 3D model through a gauntlet of 3D printer nozzles in this challenging arcade game by MakerDeck!">
+    <meta property="og:image" content="https://pirillo.com/arcade/images/makerdeck-flappament.png">
+    <meta property="og:url" content="https://pirillo.com/arcade/makerdeck-flappament.html">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Chris Pirillo's Arcade">
+
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="MakerDeck Flappament - 3D Printing Arcade Game">
+    <meta name="twitter:description" content="Fly your 3D model through a gauntlet of 3D printer nozzles in this challenging arcade game by MakerDeck!">
+    <meta name="twitter:image" content="https://pirillo.com/arcade/images/makerdeck-flappament.png">
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "VideoGame",
+      "name": "MakerDeck Flappament",
+      "url": "https://pirillo.com/arcade/makerdeck-flappament.html",
+      "image": "https://pirillo.com/arcade/images/makerdeck-flappament.png",
+      "description": "Fly your 3D model through a gauntlet of 3D printer nozzles in this challenging arcade game by MakerDeck! How high can you score in MakerDeck Flappament?",
+      "applicationCategory": "Game",
+      "gamePlatform": ["PC", "Web Browser", "Mobile Web Browser"],
+      "operatingSystem": "All (Web-based)",
+      "author": {
+        "@type": "Organization",
+        "name": "MakerDeck"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Chris Pirillo's Arcade"
+      },
+      "keywords": "3D printing, arcade, flappy bird, stl, 3d model, browser game, makerdeck, chris pirillo",
+      "genre": "Arcade game",
+      "playMode": "SinglePlayer",
+      "typicalAgeRange": "8+"
+    }
+    </script>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Press Start 2P', sans-serif; /* Ensure font is applied */
+            color: #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+            text-shadow: 2px 2px #000000;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            background-color: #141414;
+            -webkit-tap-highlight-color: transparent;
+            outline: none;
+        }
+
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #gameCanvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 1;
+        }
+
+        .ui-element {
+            position: relative;
+            text-align: center;
+            z-index: 5;
+        }
+
+        #gameTitle {
+            font-size: clamp(2em, 5vw, 3.5em); /* Using clamp for responsive font size */
+            color: #fca311;
+            margin-bottom: 25px;
+            text-shadow: 3px 3px #000000, 0 0 10px #ff8c00;
+            background-color: transparent;
+            border: none;
+            padding: 0;
+            line-height: 1.2;
+        }
+
+        #scoreDisplay {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            left: auto;
+            transform: none;
+            font-size: clamp(1.5em, 4vw, 2.2em); /* Using clamp for responsive font size */
+            color: #fca311;
+            background-color: transparent;
+            border: none;
+            padding: 5px 10px;
+            z-index: 5;
+        }
+
+        #startOptionsContainer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding: 0;
+            background-color: transparent;
+            border: none;
+            z-index: 5;
+        }
+
+        #dragMessageText, .orText, #defaultHeroButton {
+            font-size: clamp(0.75em, 1.6vw, 1.0em); /* Using clamp for responsive font size */
+            color: #c5c6c7;
+            line-height: 1.5;
+            margin: 2px 5px;
+            background-color: transparent;
+            border: none;
+            padding: 3px;
+        }
+
+        #dragMessageText {
+            cursor: pointer;
+            text-decoration: none;
+        }
+        #dragMessageText:hover {
+            color: #fca311;
+        }
+
+        #secondLineStartOptions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 5px;
+        }
+
+        .orText {
+            font-style: normal;
+            color: #a0a0a0;
+            margin-right: 8px;
+        }
+
+        #defaultHeroButton {
+            background: none;
+            border: none;
+            color: #c5c6c7;
+            text-decoration: underline;
+            padding: 0;
+            font-family: 'Press Start 2P', sans-serif; /* Ensure font is applied */
+            font-size: clamp(0.75em, 1.6vw, 1.0em); /* Using clamp for responsive font size */
+            cursor: pointer;
+            margin-top: 0;
+            box-shadow: none;
+        }
+        #defaultHeroButton:hover {
+            color: #fca311;
+        }
+         #defaultHeroButton:active {
+            transform: none;
+            box-shadow: none;
+        }
+
+
+        #messageDisplay {
+            font-size: clamp(1em, 2.5vw, 1.5em); /* Using clamp for responsive font size */
+            color: #c5c6c7;
+            max-width: 80%;
+            line-height: 1.5;
+            visibility: hidden;
+            background-color: rgba(0, 0, 0, 0.7);
+            border: 2px solid #9a8c98;
+            padding: 10px 20px;
+            border-radius: 5px;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%,-50%);
+        }
+
+
+        #fileInput {
+            display: none;
+        }
+
+        #dragOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: calc(100% - 20px);
+            height: calc(100% - 20px);
+            margin: 10px;
+            background-color: rgba(74, 78, 105, 0.8);
+            border: 4px dashed #fca311;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            font-size: clamp(1.2em, 3vw, 1.8em); /* Using clamp for responsive font size */
+            color: #e0e0e0;
+            pointer-events: none;
+            z-index: 10;
+            box-sizing: border-box;
+        }
+
+        #errorModal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #d32f2f;
+            color: white;
+            padding: 20px 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
+            z-index: 100;
+            text-align: center;
+            border: 2px solid #b71c1c;
+            width: 80%;
+            max-width: 400px;
+        }
+        #errorModal button {
+            margin-top: 15px;
+            padding: 8px 15px;
+            background-color: #c5c6c7;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-family: 'Press Start 2P', sans-serif; /* Ensure font is applied */
+            text-shadow: none;
+        }
+        .loader {
+            border: 8px solid #f3f3f3;
+            border-top: 8px solid #3498db;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            animation: spin 1s linear infinite;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-left: -30px;
+            margin-top: -30px;
+            z-index: 20;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        #makerDeckLink {
+            position: absolute; /* Default to absolute, mobile will override to fixed */
+            bottom: 15px;
+            right: 15px;
+            font-size: clamp(0.7em, 1.5vw, 0.9em); /* Using clamp for responsive font size */
+            color: #fca311;
+            text-decoration: none;
+            background-color: rgba(0,0,0,0.5);
+            padding: 5px 8px;
+            border-radius: 3px;
+            z-index: 5;
+            user-select: auto;
+            -webkit-user-select: auto;
+            -moz-user-select: auto;
+            -ms-user-select: auto;
+        }
+        #makerDeckLink:hover {
+            color: #ffc107;
+        }
+
+        /* --- Mobile Specific Adjustments --- */
+        @media (max-width: 768px) {
+            #makerDeckLink {
+                position: fixed;
+                bottom: 15px;
+                right: 15px;
+                font-size: clamp(0.7em, 2vw, 0.9em); /* Slightly larger base for mobile */
+                padding: 6px 9px;
+                z-index: 50;
+            }
+
+            #scoreDisplay {
+                top: 10px;
+                right: 10px;
+                font-size: clamp(1.2em, 3.5vw, 2em); /* Adjusted clamp for mobile score */
+            }
+            #gameTitle {
+                font-size: clamp(1.8em, 4.5vw, 3em); /* Adjusted clamp for mobile title */
+                margin-bottom: 20px;
+            }
+            #dragMessageText, .orText, #defaultHeroButton {
+                font-size: clamp(0.7em, 1.5vw, 0.9em); /* Adjusted clamp for mobile text */
+            }
+            #messageDisplay {
+                 font-size: clamp(0.9em, 2.2vw, 1.3em); /* Adjusted clamp for mobile messages */
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        <div id="gameTitle" class="ui-element">MakerDeck<br>Flappament</div>
+        <div id="scoreDisplay" class="ui-element">0</div>
+
+        <div id="startOptionsContainer" class="ui-element">
+            <span id="dragMessageText">Drag Your STL Hero (Model) Here!</span>
+            <div id="secondLineStartOptions">
+                <span class="orText">or</span>
+                <button id="defaultHeroButton">Play with a Calibration Cube</button>
+            </div>
+        </div>
+
+        <div id="messageDisplay" class="ui-element"></div>
+        <input type="file" id="fileInput" accept=".stl">
+
+        <div id="dragOverlay">Drop STL File Here!</div>
+        <div id="loadingIndicator" class="loader" style="display: none;"></div>
+        <a href="https://twitch.tv/MakerDeck" target="_blank" id="makerDeckLink">@MakerDeck</a>
+    </div>
+
+    <div id="errorModal" style="display: none;">
+        <p id="errorMessage"></p>
+        <button id="errorOkButton">OK</button>
+    </div>
+
+    <script>
+        // --- Global Variables & Constants ---
+        let scene, camera, renderer, stlLoader;
+        let playerAvatar, playerBox;
+        let nozzles = [];
+        let parallaxGrid1, parallaxGrid2;
+        let gameLoopTimeout;
+        let score = 0;
+        let gameState = 'initial'; // Possible states: 'initial', 'loadingSTL', 'playing', 'gameOver'
+
+        // Colors for nozzle components
+        const NOZZLE_METAL_COLOR = 0xE1C16E; // Brass-like color for nozzle parts
+
+        // Materials for nozzle components (initialized in init)
+        let nozzleMaterial; // For the threaded part
+        let nozzleHexMaterial; // For the hex nut part
+        let nozzleTipMaterial; // For the tip part
+
+        // Player physics
+        const PLAYER_JUMP_VELOCITY = 0.045; // Upward velocity on flap
+        const GRAVITY = 0.0030; // Downward acceleration
+        let playerVelocityY = 0; // Current vertical velocity of the player
+        const PLAYER_START_Y = 0; // Initial Y position of the player
+
+        // Player starting X position based on screen width (to be more centered)
+        const PLAYER_START_X_DIVISOR_DESKTOP = 4; // Divisor for desktop
+        const PLAYER_START_X_DIVISOR_MOBILE = 5;  // Divisor for mobile (more to the left)
+
+        // Player avatar rotation speeds
+        const SPIN_RATE_X_STEADY = 0.020;
+        const SPIN_RATE_Y_STEADY = 0.022;
+        const SPIN_RATE_Z_STEADY = 0.018;
+
+        // Nozzle properties
+        const NOZZLE_SPEED = 0.022; // How fast nozzles move towards the player
+        const NOZZLE_SPAWN_INTERVAL = 1800; // Milliseconds between nozzle pair spawns
+        let lastNozzleSpawnTime = 0; // Timestamp of the last nozzle spawn
+
+        // Nozzle gap properties (difficulty scaling)
+        const INITIAL_NOZZLE_GAP_HEIGHT = 1.4; // Starting vertical gap between nozzles
+        let currentNozzleGapHeight = INITIAL_NOZZLE_GAP_HEIGHT; // Current gap, decreases over time
+        const MIN_NOZZLE_GAP_HEIGHT = 0.7; // Smallest possible gap
+        const NOZZLE_GAP_DECREASE_INTERVAL = 20; // Decrease gap every X nozzles passed
+        const NOZZLE_GAP_DECREASE_AMOUNT = 0.01; // Amount to decrease gap by
+        let nozzlesPassedSinceLastGapChange = 0; // Counter for gap decrease logic
+
+        const NOZZLE_WIDTH = 0.3; // Visual width of the nozzle (used for positioning)
+
+        // Game area dimensions
+        const GAME_AREA_HEIGHT = 3; // Fixed vertical size of the game world in Three.js units
+        const MIN_NOZZLE_THREAD_LENGTH = GAME_AREA_HEIGHT * 1.2; // Min length for nozzle threads
+        const MAX_NOZZLE_THREAD_LENGTH = GAME_AREA_HEIGHT * 1.8; // Max length for nozzle threads
+
+        let gameAreaWidth; // Calculated based on aspect ratio
+        const BOTTOM_BOUNDARY = -GAME_AREA_HEIGHT / 2; // Bottom edge of the playable area
+        const TOP_BOUNDARY = GAME_AREA_HEIGHT / 2;   // Top edge of the playable area
+
+        // Frame rate control
+        const TARGET_FPS = 60;
+        const FRAME_INTERVAL = 1000 / TARGET_FPS; // Milliseconds per frame
+
+        // Collision detection sensitivity scales (smaller value = smaller effective hitbox)
+        const PLAYER_COLLISION_SCALE_DESKTOP = 0.25;
+        const PLAYER_COLLISION_SCALE_MOBILE = 0.25; // MODIFIED: Reduced for mobile
+
+        // Parallax background properties
+        const PARALLAX_GRID_SPEED = NOZZLE_SPEED * 0.3; // Speed of the parallax grids relative to nozzles
+        let parallaxGridSize; // Size of the parallax grids, calculated based on game area
+
+        // Static background and grid colors (used if parallax is not fully covering)
+        const STATIC_BACKGROUND_COLOR = 0x606B5D; // Dark grayish green
+        const STATIC_GRID_LINE_COLOR = 0xE0E0D0;  // Light gray for grid lines
+
+
+        // --- DOM Elements ---
+        const gameContainer = document.getElementById('gameContainer');
+        const gameCanvas = document.getElementById('gameCanvas');
+        const gameTitle = document.getElementById('gameTitle');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const startOptionsContainer = document.getElementById('startOptionsContainer');
+        const dragMessageText = document.getElementById('dragMessageText');
+        const messageDisplay = document.getElementById('messageDisplay');
+        const defaultHeroButton = document.getElementById('defaultHeroButton');
+        const fileInput = document.getElementById('fileInput');
+        const dragOverlay = document.getElementById('dragOverlay');
+        const errorModal = document.getElementById('errorModal');
+        const errorMessage = document.getElementById('errorMessage');
+        const errorOkButton = document.getElementById('errorOkButton');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const makerDeckLink = document.getElementById('makerDeckLink');
+
+        // --- Utility Functions ---
+        /**
+         * Checks if the game is running on a mobile-sized screen.
+         * @returns {boolean} True if screen width is <= 768px.
+         */
+        function isMobile() {
+            return window.innerWidth <= 768;
+        }
+
+        /**
+         * Generates a random hexadecimal color.
+         * @returns {number} A random hex color value (e.g., 0xff0000 for red).
+         */
+        function getRandomHexColor() {
+            return Math.floor(Math.random()*16777215);
+        }
+        /**
+         * Darkens a given hex color by a specified percentage.
+         * @param {number} hexColor - The input color in hex format.
+         * @param {number} [percentDarker=0.3] - The percentage to darken (0.0 to 1.0).
+         * @returns {number} The darkened hex color.
+         */
+        function getDarkerHue(hexColor, percentDarker = 0.3) {
+            const color = new THREE.Color(hexColor);
+            const hsl = {};
+            color.getHSL(hsl);
+            hsl.l = Math.max(0, hsl.l * (1 - percentDarker)); // Reduce lightness
+            color.setHSL(hsl.h, hsl.s, hsl.l);
+            return color.getHex();
+        }
+
+
+        // --- Initialization ---
+        /**
+         * Initializes the entire game: scene, camera, renderer, lights, loaders, and event listeners.
+         */
+        function init() {
+            // Basic Three.js setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(STATIC_BACKGROUND_COLOR); // Fallback background
+
+            // Calculate game area width based on aspect ratio
+            const aspect = gameContainer.clientWidth / gameContainer.clientHeight;
+            gameAreaWidth = GAME_AREA_HEIGHT * aspect;
+            parallaxGridSize = Math.max(gameAreaWidth * 1.5, GAME_AREA_HEIGHT * 1.5) * 2; // Ensure grid is large enough
+
+            // Orthographic camera for 2D-like projection
+            camera = new THREE.OrthographicCamera(
+                -gameAreaWidth / 2, gameAreaWidth / 2,  // left, right
+                GAME_AREA_HEIGHT / 2, -GAME_AREA_HEIGHT / 2, // top, bottom
+                0.1, 1000 // near, far clipping planes
+            );
+            camera.position.z = 10; // Position camera to view the scene
+
+            // WebGL Renderer setup
+            renderer = new THREE.WebGLRenderer({ canvas: gameCanvas, antialias: true });
+            renderer.setSize(gameContainer.clientWidth, gameContainer.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio); // For sharper rendering on high DPI screens
+
+            // Initialize nozzle materials (textures created later)
+            nozzleMaterial = createNozzleThreadMaterial(); // Textured material for threads
+            nozzleHexMaterial = new THREE.MeshStandardMaterial({
+                color: NOZZLE_METAL_COLOR, metalness: 0.8, roughness: 0.35, flatShading: true
+            });
+            nozzleTipMaterial = new THREE.MeshStandardMaterial({
+                color: NOZZLE_METAL_COLOR, metalness: 0.8, roughness: 0.3, flatShading: false
+            });
+
+            // Lighting
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.7); // Soft ambient light
+            scene.add(ambientLight);
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.9); // Brighter directional light
+            directionalLight.position.set(5, 10, 7.5); // Positioned to cast some shadows/highlights
+            scene.add(directionalLight);
+
+            // STL Loader for custom 3D models
+            stlLoader = new THREE.STLLoader();
+
+            // Event listeners for UI elements
+            dragMessageText.addEventListener('click', () => {
+                if (gameState === 'initial') fileInput.click(); // Open file dialog
+            });
+            defaultHeroButton.addEventListener('click', loadDefaultHero);
+            fileInput.addEventListener('change', handleFileSelect);
+            errorOkButton.addEventListener('click', hideError);
+
+            // Drag and drop listeners for STL files
+            gameContainer.addEventListener('dragover', handleDragOver);
+            gameContainer.addEventListener('dragleave', handleDragLeave);
+            gameContainer.addEventListener('drop', handleDrop);
+
+            // Game input listeners
+            window.addEventListener('keydown', handleKeyDown); // Keyboard for flap
+            gameContainer.addEventListener('pointerdown', handleFlapInput); // Mouse/touch for flap or restart
+
+            // Window resize listener
+            window.addEventListener('resize', onWindowResize);
+            onWindowResize(); // Initial call to set up sizes
+
+            updateUI(); // Set initial UI state
+            setTimeout(startGameLoop, 50); // Start the game loop after a brief delay
+        }
+
+        /**
+         * Initializes or re-initializes the parallax scrolling background grids.
+         */
+        function initParallaxBackground() {
+            const gridLineColorHex = STATIC_GRID_LINE_COLOR;
+            const divisions = Math.floor(parallaxGridSize / 0.5); // Number of grid lines
+
+            // Dispose of old grids if they exist to prevent memory leaks
+            if (parallaxGrid1) scene.remove(parallaxGrid1);
+            if (parallaxGrid2) scene.remove(parallaxGrid2);
+            if (parallaxGrid1 && parallaxGrid1.geometry) parallaxGrid1.geometry.dispose();
+            if (parallaxGrid2 && parallaxGrid2.geometry) parallaxGrid2.geometry.dispose();
+
+            // Create two grid helpers for seamless looping
+            parallaxGrid1 = new THREE.GridHelper(parallaxGridSize, divisions, gridLineColorHex, gridLineColorHex);
+            parallaxGrid1.rotation.x = Math.PI / 2; // Rotate to be vertical
+            parallaxGrid1.position.z = -2; // Behind other game elements
+            parallaxGrid1.position.x = 0;
+            scene.add(parallaxGrid1);
+
+            parallaxGrid2 = new THREE.GridHelper(parallaxGridSize, divisions, gridLineColorHex, gridLineColorHex);
+            parallaxGrid2.rotation.x = Math.PI / 2;
+            parallaxGrid2.position.z = -2;
+            parallaxGrid2.position.x = parallaxGridSize; // Positioned to the right of the first grid
+            scene.add(parallaxGrid2);
+        }
+
+        /**
+         * Updates the position of the parallax background grids to create a scrolling effect.
+         */
+        function updateParallaxBackground() {
+            if (!parallaxGrid1 || !parallaxGrid2) return; // Safety check
+
+            // Move grids to the left
+            parallaxGrid1.position.x -= PARALLAX_GRID_SPEED;
+            parallaxGrid2.position.x -= PARALLAX_GRID_SPEED;
+
+            // If a grid moves off-screen, reposition it to the right of the other grid
+            if (parallaxGrid1.position.x <= -parallaxGridSize) {
+                parallaxGrid1.position.x = parallaxGrid2.position.x + parallaxGridSize;
+            }
+            if (parallaxGrid2.position.x <= -parallaxGridSize) {
+                parallaxGrid2.position.x = parallaxGrid1.position.x + parallaxGridSize;
+            }
+        }
+
+        /**
+         * Handles flap input (jump) from pointer (mouse/touch) or keyboard.
+         * @param {Event} event - The input event.
+         */
+        function handleFlapInput(event) {
+            // Prevent flapping if clicking on UI elements in the initial state
+            if (gameState === 'initial' && (event.target === dragMessageText || event.target === defaultHeroButton || event.target === gameTitle || event.target === startOptionsContainer)) {
+                return;
+            }
+            if (gameState === 'playing') {
+                flapPlayer();
+            } else if (gameState === 'gameOver') {
+                startGame(); // Restart game on click/tap after game over
+            }
+        }
+
+        /**
+         * Handles window resize events to adjust camera and renderer.
+         */
+        function onWindowResize() {
+            const aspect = gameContainer.clientWidth / gameContainer.clientHeight;
+            gameAreaWidth = GAME_AREA_HEIGHT * aspect;
+
+            // Update camera projection
+            camera.left = -gameAreaWidth / 2;
+            camera.right = gameAreaWidth / 2;
+            camera.top = GAME_AREA_HEIGHT / 2;
+            camera.bottom = -GAME_AREA_HEIGHT / 2;
+            camera.updateProjectionMatrix();
+
+            // Update renderer size
+            renderer.setSize(gameContainer.clientWidth, gameContainer.clientHeight);
+
+            // Re-calculate parallax grid size and re-initialize
+            parallaxGridSize = Math.max(gameAreaWidth * 1.5, GAME_AREA_HEIGHT * 1.5) * 2;
+            initParallaxBackground(); // Recreate grids for new size
+        }
+
+        /**
+         * Sets the current game state and updates the UI accordingly.
+         * @param {string} newState - The new game state ('initial', 'loadingSTL', 'playing', 'gameOver').
+         */
+        function setGameState(newState) {
+            gameState = newState;
+            console.log("Game state changed to: " + gameState + (isMobile() ? " (Mobile)" : " (Desktop)"));
+            updateUI();
+        }
+
+        /**
+         * Updates the visibility and content of UI elements based on the current game state.
+         */
+        function updateUI() {
+            scoreDisplay.textContent = `${score}`; // Always update score, though it might be hidden
+
+            // Default states for UI elements
+            startOptionsContainer.style.display = 'none';
+            gameTitle.style.display = 'none';
+            loadingIndicator.style.display = 'none';
+            messageDisplay.style.visibility = 'hidden';
+            makerDeckLink.style.display = 'block'; // Usually visible
+
+            // State-specific UI changes
+            switch (gameState) {
+                case 'initial':
+                    gameTitle.style.display = 'block';
+                    startOptionsContainer.style.display = 'flex';
+                    scoreDisplay.style.display = 'none';
+                    // MODIFIED: Change text based on device type
+                    if (isMobile()) {
+                        dragMessageText.textContent = "Open your STL Hero (Model)";
+                    } else {
+                        dragMessageText.textContent = "Drag Your STL Hero (Model) Here!";
+                    }
+                    break;
+                case 'loadingSTL':
+                    // gameTitle.style.display = 'block'; // MODIFIED: Removed to keep title hidden
+                    // loadingIndicator.style.display = 'block'; // MODIFIED: Removed to keep loader hidden
+                    scoreDisplay.style.display = 'none';
+                    break;
+                case 'playing':
+                    scoreDisplay.style.display = 'block';
+                    break;
+                case 'gameOver':
+                    messageDisplay.textContent = `Print Again?`;
+                    messageDisplay.style.visibility = 'visible';
+                    scoreDisplay.style.display = 'block';
+                    break;
+            }
+        }
+
+        /**
+         * Handles file selection from the file input element.
+         * @param {Event} event - The file input change event.
+         */
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) loadSTL(file);
+        }
+
+        /**
+         * Handles drag over event for STL file drop.
+         * @param {DragEvent} event - The drag event.
+         */
+        function handleDragOver(event) {
+            event.preventDefault(); // Necessary to allow drop
+            event.stopPropagation();
+            if (gameState === 'initial') {
+                dragOverlay.style.display = 'flex'; // Show drop overlay
+            }
+        }
+
+        /**
+         * Handles drag leave event.
+         * @param {DragEvent} event - The drag event.
+         */
+        function handleDragLeave(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            dragOverlay.style.display = 'none'; // Hide drop overlay
+        }
+
+        /**
+         * Handles file drop event.
+         * @param {DragEvent} event - The drop event.
+         */
+        function handleDrop(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            dragOverlay.style.display = 'none';
+            if (gameState === 'initial') {
+                const file = event.dataTransfer.files[0];
+                if (file) loadSTL(file);
+            }
+        }
+
+        /**
+         * Creates a canvas texture with a letter drawn on it for the default hero cube.
+         * @param {string} letter - The letter to draw (e.g., 'X', 'Y', 'Z').
+         * @param {number} size - The width and height of the texture canvas.
+         * @param {string} faceColor - CSS color string for the cube face background.
+         * @param {string} letterColor - CSS color string for the letter.
+         * @param {string} font - CSS font string (e.g., '48px Arial Black').
+         * @returns {THREE.CanvasTexture} The generated texture.
+         */
+        function createLetterTexture(letter, size, faceColor, letterColor, font) {
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            // Draw background
+            ctx.fillStyle = faceColor;
+            ctx.fillRect(0, 0, size, size);
+
+            // Setup font for letter
+            ctx.font = font;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            
+            // Small vertical offset for better centering of some fonts
+            const FONT_SIZE_PX = parseFloat(font.match(/(\d+)px/)[1]); // Extract font size
+            const letterOffsetY = FONT_SIZE_PX * 0.08; // Adjust as needed
+
+            // On mobile, add a stroke for better visibility if colors are too similar
+            if (isMobile()) {
+                ctx.lineWidth = Math.max(1, FONT_SIZE_PX / 10); // Thicker stroke for smaller fonts
+                ctx.strokeStyle = letterColor; // Use letter color for stroke as well, or a contrasting one
+                ctx.strokeText(letter, size / 2, size / 2 + letterOffsetY);
+            }
+            
+            // Draw letter
+            ctx.fillStyle = letterColor;
+            ctx.fillText(letter, size / 2, size / 2 + letterOffsetY);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true; // Important for texture to apply
+            return texture;
+        }
+
+        /**
+         * Creates the geometry for the default calibration cube hero.
+         * @returns {THREE.BoxGeometry} The cube geometry.
+         */
+        function createDefaultHeroGeometry() {
+            const desktopCubeSize = 0.40; // Size for desktop
+            const mobileCubeSize = 0.38;  // Slightly smaller for mobile for better screen fit
+            const cubeSize = isMobile() ? mobileCubeSize : desktopCubeSize;
+            const geometry = new THREE.BoxGeometry(cubeSize, cubeSize, cubeSize);
+            return geometry;
+        }
+
+        /**
+         * Creates the materials (with lettered textures) for the default hero cube.
+         * @returns {THREE.MeshStandardMaterial[]} An array of materials for each face of the cube.
+         */
+        function createDefaultHeroMaterials() {
+            const baseCubeColorHex = getRandomHexColor(); // Random base color for the cube
+            const letterColorHex = getDarkerHue(baseCubeColorHex, 0.3); // Darker shade for letters
+
+            // Texture and font size adjustments for mobile vs desktop
+            const baseTextureSize = 64; // px
+            const mobileTextureSize = isMobile() ? 56 : baseTextureSize; // Slightly smaller texture for mobile
+            const textureSize = mobileTextureSize;
+
+            const baseLetterFontSize = Math.floor(textureSize * 0.75); // px
+            const mobileLetterFontSize = Math.floor(textureSize * 0.80); // Slightly larger relative font for mobile texture
+            const letterFontSize = isMobile() ? mobileLetterFontSize : baseLetterFontSize;
+            
+            const fontDeclaration = `${letterFontSize}px Arial Black`; // Font style for letters
+
+            // Convert hex colors to CSS style strings for canvas drawing
+            const baseCubeColorStyle = new THREE.Color(baseCubeColorHex).getStyle();
+            const letterColorStyle = new THREE.Color(letterColorHex).getStyle();
+
+            // Create materials for each face of the cube
+            const materials = [
+                // Right (+X), Left (-X), Top (+Y), Bottom (-Y), Front (+Z), Back (-Z)
+                new THREE.MeshStandardMaterial({ map: createLetterTexture('X', textureSize, baseCubeColorStyle, letterColorStyle, fontDeclaration), metalness: 0.3, roughness: 0.6 }), // Right face
+                new THREE.MeshStandardMaterial({ color: baseCubeColorHex, metalness: 0.3, roughness: 0.6 }), // Left face (plain)
+                new THREE.MeshStandardMaterial({ map: createLetterTexture('Y', textureSize, baseCubeColorStyle, letterColorStyle, fontDeclaration), metalness: 0.3, roughness: 0.6 }), // Top face
+                new THREE.MeshStandardMaterial({ color: baseCubeColorHex, metalness: 0.3, roughness: 0.6 }), // Bottom face (plain)
+                new THREE.MeshStandardMaterial({ map: createLetterTexture('Z', textureSize, baseCubeColorStyle, letterColorStyle, fontDeclaration), metalness: 0.3, roughness: 0.6 }), // Front face
+                new THREE.MeshStandardMaterial({ color: baseCubeColorHex, metalness: 0.3, roughness: 0.6 })  // Back face (plain)
+            ];
+            return materials;
+        }
+
+        /**
+         * Loads the default calibration cube as the player avatar.
+         */
+        function loadDefaultHero() {
+            setGameState('loadingSTL'); // Show loading indicator
+            // Brief timeout to allow UI update before potential blocking operations
+            setTimeout(() => {
+                const geometry = createDefaultHeroGeometry();
+                const materials = createDefaultHeroMaterials();
+                setupAvatarAndStart(geometry, materials);
+            }, 100);
+        }
+
+        /**
+         * Loads an STL file selected by the user.
+         * @param {File} file - The STL file object.
+         */
+        function loadSTL(file) {
+            if (!file.name.toLowerCase().endsWith('.stl')) {
+                showError('Invalid file type. Please upload an .stl file.');
+                setGameState('initial'); // Revert to initial state
+                return;
+            }
+            setGameState('loadingSTL');
+
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const geometry = stlLoader.parse(event.target.result); // Parse STL data
+                    const material = new THREE.MeshStandardMaterial({
+                        color: getRandomHexColor(), metalness: 0.4, roughness: 0.5, flatShading: false
+                    });
+                    setupAvatarAndStart(geometry, material);
+                } catch (error) {
+                    console.error('Error loading STL:', error);
+                    showError('Could not load or parse STL. Ensure it is valid.');
+                    setGameState('initial');
+                }
+            };
+            reader.onerror = () => {
+                showError('Error reading file.');
+                setGameState('initial');
+            };
+            reader.readAsArrayBuffer(file); // Read file as ArrayBuffer
+        }
+
+        /**
+         * Sets up the player avatar with the given geometry and material(s), then starts the game.
+         * @param {THREE.BufferGeometry} geometry - The geometry for the avatar.
+         * @param {THREE.Material | THREE.Material[]} materialOrMaterials - The material or array of materials.
+         */
+        function setupAvatarAndStart(geometry, materialOrMaterials) {
+            geometry.computeVertexNormals(); // Important for lighting
+            geometry.center(); // Center the model at its origin
+
+            // Clean up previous avatar if it exists
+            if (playerAvatar) {
+                if (playerAvatar.geometry) playerAvatar.geometry.dispose();
+                if (playerAvatar.material) {
+                    if (Array.isArray(playerAvatar.material)) {
+                        playerAvatar.material.forEach(mat => {
+                            if (mat.map) mat.map.dispose(); // Dispose textures
+                            mat.dispose();
+                        });
+                    } else {
+                        if (playerAvatar.material.map) playerAvatar.material.map.dispose();
+                        playerAvatar.material.dispose();
+                    }
+                }
+                scene.remove(playerAvatar);
+            }
+
+            playerAvatar = new THREE.Mesh(geometry, materialOrMaterials);
+
+            // Scale STL models to a consistent size, default cube is already sized
+            if (!(Array.isArray(materialOrMaterials))) { // Indicates it's an STL, not the default cube
+                geometry.computeBoundingBox();
+                const size = new THREE.Vector3();
+                geometry.boundingBox.getSize(size);
+                var maxDim = Math.max(size.x, size.y, size.z);
+                
+                // Desired avatar size, smaller for mobile
+                const baseDesiredAvatarSize = 0.70;
+                const mobileDesiredAvatarSize = 0.50;
+                const desiredAvatarSize = isMobile() ? mobileDesiredAvatarSize : baseDesiredAvatarSize;
+
+                let scaleFactor = 1;
+                if (maxDim > 0 && isFinite(maxDim)) { // Check for valid dimension
+                   scaleFactor = desiredAvatarSize / maxDim;
+                } else {
+                    scaleFactor = 0.1; // Fallback scale if maxDim is invalid
+                    console.warn("Invalid maxDim for STL, using fallback scale.");
+                }
+                playerAvatar.scale.set(scaleFactor, scaleFactor, scaleFactor);
+            }
+
+            // Set initial position based on screen type
+            const startXDivisor = isMobile() ? PLAYER_START_X_DIVISOR_MOBILE : PLAYER_START_X_DIVISOR_DESKTOP;
+            playerAvatar.position.set(-gameAreaWidth / startXDivisor, PLAYER_START_Y, 0);
+
+            // Random initial spin direction
+            playerAvatar.userData.spinDirectionX = (Math.random() < 0.5 ? 1 : -1);
+            playerAvatar.userData.spinDirectionY = (Math.random() < 0.5 ? 1 : -1);
+            playerAvatar.userData.spinDirectionZ = (Math.random() < 0.5 ? 1 : -1);
+
+            scene.add(playerAvatar);
+            playerBox = new THREE.Box3(); // Initialize bounding box for collisions
+
+            startGame(); // Proceed to start the game
+        }
+
+        /**
+         * Resets the player's state (position, velocity, rotation) and game difficulty.
+         */
+        function resetPlayer() {
+            if (playerAvatar) {
+                const startXDivisor = isMobile() ? PLAYER_START_X_DIVISOR_MOBILE : PLAYER_START_X_DIVISOR_DESKTOP;
+                playerAvatar.position.set(-gameAreaWidth / startXDivisor, PLAYER_START_Y, 0);
+                playerAvatar.rotation.set(0, 0, 0); // Reset rotation
+                // Re-randomize spin direction for variety
+                playerAvatar.userData.spinDirectionX = (Math.random() < 0.5 ? 1 : -1);
+                playerAvatar.userData.spinDirectionY = (Math.random() < 0.5 ? 1 : -1);
+                playerAvatar.userData.spinDirectionZ = (Math.random() < 0.5 ? 1 : -1);
+            }
+            playerVelocityY = 0; // Reset vertical velocity
+            currentNozzleGapHeight = INITIAL_NOZZLE_GAP_HEIGHT; // Reset nozzle gap
+            nozzlesPassedSinceLastGapChange = 0; // Reset counter for gap change
+        }
+
+        /**
+         * Makes the player avatar "flap" (jump upwards).
+         */
+        function flapPlayer() {
+            playerVelocityY = PLAYER_JUMP_VELOCITY;
+        }
+
+        /**
+         * Updates the player's position, rotation, and handles boundary collisions.
+         */
+        function updatePlayer() {
+            if (!playerAvatar) return; // Safety check
+
+            // Apply gravity and update position
+            playerVelocityY -= GRAVITY;
+            playerAvatar.position.y += playerVelocityY;
+
+            // Apply continuous rotation
+            playerAvatar.rotation.x += SPIN_RATE_X_STEADY * playerAvatar.userData.spinDirectionX;
+            playerAvatar.rotation.y += SPIN_RATE_Y_STEADY * playerAvatar.userData.spinDirectionY;
+            playerAvatar.rotation.z += SPIN_RATE_Z_STEADY * playerAvatar.userData.spinDirectionZ;
+
+            // Update player's bounding box for collision detection and boundary checks
+            playerBox.setFromObject(playerAvatar);
+
+            // Boundary checks (top/bottom of screen)
+            const avatarHeight = playerBox.max.y - playerBox.min.y;
+            if (playerBox.min.y <= BOTTOM_BOUNDARY) { // Hit bottom
+                playerAvatar.position.y = BOTTOM_BOUNDARY + avatarHeight / 2 + 0.01; // Nudge above boundary
+                playerVelocityY *= -0.4; // Small bounce
+                if (playerAvatar.position.y < PLAYER_START_Y) playerAvatar.position.y += 0.05; // Nudge towards center if stuck
+            }
+            if (playerBox.max.y >= TOP_BOUNDARY) { // Hit top
+               playerAvatar.position.y = TOP_BOUNDARY - avatarHeight / 2 - 0.01; // Nudge below boundary
+               playerVelocityY *= -0.4; // Small bounce
+                if (playerAvatar.position.y > PLAYER_START_Y) playerAvatar.position.y -= 0.05; // Nudge towards center if stuck
+            }
+        }
+
+        /**
+         * Creates a procedurally generated texture for the nozzle threads.
+         * @returns {THREE.MeshStandardMaterial} Material with the thread texture.
+         */
+        function createNozzleThreadMaterial() {
+            const threadCanvas = document.createElement('canvas');
+            const ctx = threadCanvas.getContext('2d');
+            threadCanvas.width = 32; threadCanvas.height = 64; // Texture dimensions
+
+            // Define colors for thread appearance
+            const baseBrass = new THREE.Color(NOZZLE_METAL_COLOR);
+            const grooveBrass = baseBrass.clone().multiplyScalar(0.35); // Darker for grooves
+            const highlightBrass = baseBrass.clone().lerp(new THREE.Color(0xFFFFFF), 0.85); // Lighter for highlights
+
+            // Fill background
+            ctx.fillStyle = baseBrass.getStyle();
+            ctx.fillRect(0, 0, threadCanvas.width, threadCanvas.height);
+
+            // Draw thread lines
+            const lineSpacing = 3.0; const grooveWidth = 1.8; const highlightWidth = 1.2;
+            const angleFactor = threadCanvas.width / 10; // For slight angling of threads
+
+            for (let y = 0; y < threadCanvas.height + lineSpacing; y += lineSpacing) {
+                // Draw groove
+                ctx.strokeStyle = grooveBrass.getStyle(); ctx.lineWidth = grooveWidth;
+                ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(threadCanvas.width, y + angleFactor); ctx.stroke();
+
+                // Draw highlight
+                ctx.strokeStyle = highlightBrass.getStyle(); ctx.lineWidth = highlightWidth;
+                ctx.beginPath(); const highlightOffsetY = -lineSpacing * 0.35; // Offset highlight slightly
+                ctx.moveTo(0, y + highlightOffsetY); ctx.lineTo(threadCanvas.width, y + highlightOffsetY + angleFactor); ctx.stroke();
+            }
+
+            const threadTexture = new THREE.CanvasTexture(threadCanvas);
+            threadTexture.wrapS = THREE.RepeatWrapping; threadTexture.wrapT = THREE.RepeatWrapping;
+            threadTexture.repeat.set(1, 10); // Repeat texture along the length of the thread
+            if (renderer && renderer.capabilities) threadTexture.anisotropy = renderer.capabilities.getMaxAnisotropy(); // Improve texture quality at angles
+            else threadTexture.anisotropy = 1;
+            threadTexture.needsUpdate = true;
+
+            return new THREE.MeshStandardMaterial({
+                map: threadTexture, color: NOZZLE_METAL_COLOR, metalness: 0.8, roughness: 0.35,
+            });
+        }
+
+        /**
+         * Creates the geometry for a single nozzle (composed of tip, hex, and thread).
+         * @param {number} threadLength - The length of the threaded part of the nozzle.
+         * @returns {THREE.Group} A group containing all parts of the nozzle.
+         */
+        function createNozzleGeometry(threadLength) {
+            // Define dimensions for nozzle parts
+            const overallNozzleWidth = NOZZLE_WIDTH * 1.3; // Slightly wider than the collision width
+            const hexRadius = overallNozzleWidth / 2 * 1.7; const hexHeight = 0.20;
+            const tipHeight = 0.25; const tipRadius = hexRadius * 0.6;
+            const threadRadius = hexRadius * 0.7;
+
+            // Create geometries
+            const tipGeometry = new THREE.ConeGeometry(tipRadius, tipHeight, 24);
+            const hexGeometry = new THREE.CylinderGeometry(hexRadius, hexRadius, hexHeight, 6); // 6 sides for hex
+            const threadGeometry = new THREE.CylinderGeometry(threadRadius, threadRadius, threadLength, 24);
+
+            const nozzleGroup = new THREE.Group(); // Group to hold all parts
+
+            // Create meshes and position them relative to the group's origin
+            const tipMesh = new THREE.Mesh(tipGeometry, nozzleTipMaterial);
+            tipMesh.position.y = hexHeight / 2 + tipHeight / 2; // Tip on top of hex
+            nozzleGroup.add(tipMesh);
+
+            const hexMesh = new THREE.Mesh(hexGeometry, nozzleHexMaterial);
+            nozzleGroup.add(hexMesh); // Hex at the origin of the group
+
+            const threadMesh = new THREE.Mesh(threadGeometry, nozzleMaterial);
+            threadMesh.position.y = -(hexHeight / 2 + threadLength / 2); // Thread below hex
+            nozzleGroup.add(threadMesh);
+
+            // Store references to individual parts for potential future use (e.g., animation)
+            nozzleGroup.userData.tip = tipMesh;
+            nozzleGroup.userData.hex = hexMesh;
+            nozzleGroup.userData.thread = threadMesh;
+
+            return nozzleGroup;
+        }
+
+        /**
+         * Spawns a pair of nozzles (top and bottom) with a gap in between.
+         */
+        function spawnNozzlePair() {
+            // Randomize thread lengths for visual variety
+            const randomThreadLengthTop = MIN_NOZZLE_THREAD_LENGTH + Math.random() * (MAX_NOZZLE_THREAD_LENGTH - MIN_NOZZLE_THREAD_LENGTH);
+            const randomThreadLengthBottom = MIN_NOZZLE_THREAD_LENGTH + Math.random() * (MAX_NOZZLE_THREAD_LENGTH - MIN_NOZZLE_THREAD_LENGTH);
+
+            const bottomNozzle = createNozzleGeometry(randomThreadLengthBottom);
+            const topNozzle = createNozzleGeometry(randomThreadLengthTop);
+
+            // Get actual dimensions from created geometry for precise positioning
+            const actualHexHeight = bottomNozzle.userData.hex.geometry.parameters.height;
+            const actualTipHeight = bottomNozzle.userData.tip.geometry.parameters.height;
+
+            // Determine vertical center of the gap, with some randomness
+            const gapCenterY = (Math.random() * (GAME_AREA_HEIGHT - currentNozzleGapHeight - 0.6)) - (GAME_AREA_HEIGHT / 2 - currentNozzleGapHeight / 2 - 0.3);
+
+            // Position bottom nozzle
+            bottomNozzle.position.y = gapCenterY - (currentNozzleGapHeight / 2) - (actualHexHeight / 2 + actualTipHeight);
+            bottomNozzle.position.x = gameAreaWidth / 2 + NOZZLE_WIDTH * 2; // Spawn off-screen to the right
+
+            // Position top nozzle (rotated)
+            topNozzle.rotation.x = Math.PI; // Rotate 180 degrees to face downwards
+            topNozzle.position.y = gapCenterY + (currentNozzleGapHeight / 2) + (actualHexHeight / 2 + actualTipHeight);
+            topNozzle.position.x = bottomNozzle.position.x; // Same X position
+
+            // Initialize bounding boxes and scored flag
+            bottomNozzle.userData.boundingBox = new THREE.Box3();
+            topNozzle.userData.boundingBox = new THREE.Box3();
+            bottomNozzle.userData.scored = false; // Flag to ensure score is only counted once per pair
+
+            scene.add(bottomNozzle);
+            scene.add(topNozzle);
+            nozzles.push({ bottom: bottomNozzle, top: topNozzle }); // Add to active nozzles array
+        }
+
+        /**
+         * Updates the positions of all active nozzles, handles scoring, and removes off-screen nozzles.
+         */
+        function updateNozzles() {
+            const removeThreshold = -gameAreaWidth / 2 - NOZZLE_WIDTH * 3; // X position to remove nozzles
+
+            // Iterate backwards to allow safe removal from array
+            for (let i = nozzles.length - 1; i >= 0; i--) {
+                const pair = nozzles[i];
+                pair.bottom.position.x -= NOZZLE_SPEED; // Move left
+                pair.top.position.x -= NOZZLE_SPEED;
+
+                // Update world matrices and bounding boxes for accurate collision detection
+                pair.bottom.updateMatrixWorld(true);
+                pair.top.updateMatrixWorld(true);
+                pair.bottom.userData.boundingBox.setFromObject(pair.bottom, true); // true to use world coordinates
+                pair.top.userData.boundingBox.setFromObject(pair.top, true);
+
+                // Scoring logic
+                if (!pair.bottom.userData.scored && playerAvatar && pair.bottom.position.x < playerAvatar.position.x) {
+                    score++;
+                    pair.bottom.userData.scored = true; // Mark as scored
+                    updateUI(); // Update score display
+
+                    // Difficulty scaling: decrease nozzle gap
+                    nozzlesPassedSinceLastGapChange++;
+                    if (nozzlesPassedSinceLastGapChange >= NOZZLE_GAP_DECREASE_INTERVAL) {
+                        if (currentNozzleGapHeight > MIN_NOZZLE_GAP_HEIGHT) {
+                            currentNozzleGapHeight -= NOZZLE_GAP_DECREASE_AMOUNT;
+                            currentNozzleGapHeight = Math.max(currentNozzleGapHeight, MIN_NOZZLE_GAP_HEIGHT); // Clamp to min
+                        }
+                        nozzlesPassedSinceLastGapChange = 0; // Reset counter
+                    }
+                }
+
+                // Remove nozzles that have moved off-screen
+                if (pair.bottom.position.x < removeThreshold) {
+                    scene.remove(pair.bottom);
+                    scene.remove(pair.top);
+                    // Dispose of geometries and materials to free memory
+                    pair.bottom.traverse(obj => {
+                        if(obj.geometry) obj.geometry.dispose();
+                        // Only dispose materials not shared (like the main nozzleMaterial)
+                        if(obj.material && obj.material !== nozzleMaterial && obj.material !== nozzleHexMaterial && obj.material !== nozzleTipMaterial && obj.material.dispose) {
+                            if (obj.material.map) obj.material.map.dispose(); // Dispose textures
+                            obj.material.dispose();
+                        }
+                    });
+                    pair.top.traverse(obj => {
+                        if(obj.geometry) obj.geometry.dispose();
+                        if(obj.material && obj.material !== nozzleMaterial && obj.material !== nozzleHexMaterial && obj.material !== nozzleTipMaterial && obj.material.dispose) {
+                            if (obj.material.map) obj.material.map.dispose();
+                            obj.material.dispose();
+                        }
+                    });
+                    nozzles.splice(i, 1); // Remove from array
+                }
+            }
+        }
+
+        /**
+         * Checks for collisions between the player avatar and nozzles.
+         * @returns {boolean} True if a collision occurred, false otherwise.
+         */
+        function checkCollisions() {
+            if (!playerAvatar || !playerBox || !playerAvatar.geometry) return false; // Safety checks
+
+            const collisionPlayerBox = new THREE.Box3();
+            playerAvatar.updateMatrixWorld(true); // Ensure world matrix is up-to-date
+            collisionPlayerBox.copy(playerBox); // Start with the full bounding box
+
+            // Scale the player's collision box for sensitivity adjustment
+            const center = new THREE.Vector3();
+            collisionPlayerBox.getCenter(center);
+            const size = new THREE.Vector3();
+            collisionPlayerBox.getSize(size);
+
+            // Use mobile or desktop collision scale
+            const currentCollisionScale = isMobile() ? PLAYER_COLLISION_SCALE_MOBILE : PLAYER_COLLISION_SCALE_DESKTOP;
+            size.multiplyScalar(currentCollisionScale); // Reduce size for more forgiving collisions
+            collisionPlayerBox.setFromCenterAndSize(center, size); // Recreate box with new size
+
+            // Check against each nozzle pair
+            for (const pair of nozzles) {
+                if (collisionPlayerBox.intersectsBox(pair.bottom.userData.boundingBox) ||
+                    collisionPlayerBox.intersectsBox(pair.top.userData.boundingBox)) {
+                    setGameState('gameOver'); // Collision detected
+                    return true;
+                }
+            }
+            return false; // No collision
+        }
+
+        /**
+         * Main game loop logic, called every frame.
+         */
+        function gameLoop() {
+            updateParallaxBackground(); // Always update background
+
+            // Handle non-playing states
+            if (gameState !== 'playing') {
+                // Gentle rotation for avatar on initial screen
+                if (gameState === 'initial' && playerAvatar) {
+                     playerAvatar.rotation.x += (Math.random() - 0.5) * 2 * SPIN_RATE_Y_STEADY * 0.5; // Slower, more random idle spin
+                     playerAvatar.rotation.y += (Math.random() - 0.5) * 2 * SPIN_RATE_Y_STEADY * 0.5;
+                     playerAvatar.rotation.z += (Math.random() - 0.5) * 2 * SPIN_RATE_Z_STEADY * 0.5;
+                }
+                render(); // Render the scene even when not playing
+                return;
+            }
+
+            // Gameplay logic for 'playing' state
+            const currentTime = Date.now();
+            if (currentTime - lastNozzleSpawnTime > NOZZLE_SPAWN_INTERVAL) {
+                spawnNozzlePair();
+                lastNozzleSpawnTime = currentTime;
+            }
+
+            updatePlayer(); // Update player physics and position
+            if (gameState === 'playing') { // Double check state in case it changed during updatePlayer (e.g., boundary hit)
+                updateNozzles(); // Update nozzle positions and scoring
+                checkCollisions(); // Check for player-nozzle collisions
+            }
+
+            render(); // Render the updated scene
+        }
+
+        /**
+         * Renders the Three.js scene using the configured camera.
+         */
+        function render() {
+            renderer.render(scene, camera);
+        }
+
+        /**
+         * Starts the recursive game loop using setTimeout for a (more) consistent frame rate.
+         */
+        function startGameLoop() {
+            function loop() {
+                gameLoop();
+                gameLoopTimeout = setTimeout(loop, FRAME_INTERVAL); // Schedule next frame
+            }
+            loop(); // Initial call
+        }
+
+        /**
+         * Stops the game loop by clearing the timeout.
+         */
+        function stopGameLoop() {
+            clearTimeout(gameLoopTimeout);
+        }
+
+        /**
+         * Initializes or restarts the game when the player chooses to play or replay.
+         */
+        function startGame() {
+            // Only start if an avatar is loaded and game is in a ready state
+            if (playerAvatar && (gameState === 'initial' || gameState === 'gameOver' || gameState === 'loadingSTL')) {
+                score = 0; // Reset score
+                resetPlayer(); // Reset player state
+
+                // Clear existing nozzles from the scene and array
+                nozzles.forEach(pair => {
+                    scene.remove(pair.bottom);
+                    scene.remove(pair.top);
+                    // Dispose geometries and materials
+                    pair.bottom.traverse(obj => {
+                        if(obj.geometry) obj.geometry.dispose();
+                        if(obj.material && obj.material !== nozzleMaterial && obj.material !== nozzleHexMaterial && obj.material !== nozzleTipMaterial && obj.material.dispose) {
+                            if (obj.material.map) obj.material.map.dispose();
+                            obj.material.dispose();
+                        }
+                    });
+                    pair.top.traverse(obj => {
+                        if(obj.geometry) obj.geometry.dispose();
+                        if(obj.material && obj.material !== nozzleMaterial && obj.material !== nozzleHexMaterial && obj.material !== nozzleTipMaterial && obj.material.dispose) {
+                            if (obj.material.map) obj.material.map.dispose();
+                            obj.material.dispose();
+                        }
+                    });
+                });
+                nozzles = []; // Empty the array
+
+                lastNozzleSpawnTime = Date.now() - NOZZLE_SPAWN_INTERVAL / 2; // Pre-warm nozzle spawn timer
+                setGameState('playing'); // Change to playing state
+                stopGameLoop(); // Ensure any existing loop is stopped before starting new
+                startGameLoop();
+            } else if (!playerAvatar && gameState === 'initial') {
+                showError("Please select or load a model first!"); // Prompt if no avatar
+            }
+        }
+
+        /**
+         * Handles keyboard input (Spacebar for flap).
+         * @param {KeyboardEvent} event - The keyboard event.
+         */
+        function handleKeyDown(event) {
+            if (event.code === 'Space') {
+                event.preventDefault(); // Prevent page scroll on spacebar
+                handleFlapInput(event); // Trigger flap/restart logic
+            }
+        }
+
+        /**
+         * Displays an error message in a modal dialog.
+         * @param {string} message - The error message to display.
+         */
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorModal.style.display = 'block';
+        }
+
+        /**
+         * Hides the error modal.
+         */
+        function hideError() {
+            errorModal.style.display = 'none';
+        }
+
+        // --- Start the application ---
+        init();
+
+    </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-1CQ4D3VQ3L"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-1CQ4D3VQ3L');
+    </script>
+</body>
+</html>
